@@ -38,7 +38,7 @@ const SidebarNew = (props) => {
         <React.Fragment>
             <motion.section
                 id="SideBar"
-                initial={{ width: "5vw" }}
+                // initial={{ width: "20vw" }}
                 whileHover={{ width: "40vh" }}
                 onHoverStart={() => setIsHovered(true)}
                 onHoverEnd={() => setIsHovered(false)}
@@ -69,7 +69,7 @@ const SidebarNew = (props) => {
                                             to={`${item.sb_link}`}
                                             className="btn col-12 d-flex flex-nowrap overflow-hidden border-0 align-items-center "
                                         >
-                                            <motion.div className="w-25  m-auto ">
+                                            <motion.div className="w-25 m-auto ">
                                                 {/* <RiListUnordered className="text-light fs-5 " /> */}
                                                 <i className={`${item.icon.includes('facebook') ? 'fa-brands' : 'fa-solid'} ${item.icon} fs-6 text-white`} ></i>
                                             </motion.div>

@@ -192,7 +192,7 @@ const AddProduct = () => {
           return { ...prev, isLoading: false };
         });
         swal({
-          text: "Added Item successfully  ",
+          text: "Added Item successfully",
           icon: "success",
           button: false,
           timer: 1200,

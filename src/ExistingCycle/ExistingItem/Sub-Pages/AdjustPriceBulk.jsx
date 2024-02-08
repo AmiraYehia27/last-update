@@ -135,13 +135,15 @@ const AdjustPriceBulk = () => {
     setIsLoading(true);
     console.log('button submit clicked..........')
     console.log("TRY POST", finalArr);
-
     try {
+      console.log('llllllllllllllllllllllllllllllllllllllllllllllllllllllllll')
       if (finalArr.length > 0) {
+        console.log('llllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllll')
         const response = await axios.post(
           "http://192.168.26.15/cms/api/update-price",
           finalArr
         );
+        console.log("response update price ==>", response)
         if (response.data.message) {
           swal({
             title: "Prices updated successfully",

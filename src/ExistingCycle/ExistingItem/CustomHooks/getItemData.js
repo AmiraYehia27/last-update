@@ -1,7 +1,12 @@
 import axios from "axios";
 export const fetchDataItem = async (Id) => {
-  let response = await axios.get(`http://192.168.26.15/cms/api/all-data/${Id}`);
-  return response;
+  try {
+    let response = await axios.get(`http://192.168.26.15/cms/api/all-data/${Id}`);
+    console.log('SEARCH RESPONSE===>', response)
+    return response;
+  } catch (e) {
+    console.log('ERRRRRRRRRRRRRRRRRROR ', e)
+  }
 };
 /*
 The function fetchDataItem takes one parameter, Id, which is used to construct the URL for the GET request. The endpoint that the function is calling is http://192.168.26.15/cms/api/all-data/ with the Id appended to the end.

@@ -90,7 +90,7 @@ const App = () => {
       <Routes>
         <Route exact path="/" element={<Home />} />
         <Route exact path="/mainpage/kviscreen" element={<KVIScreen />} />
-        <Route exact path="/mainpage/Xproduct" element={<Xproduct />} />
+        <Route exact path="/mainpage/Xproducts" element={<Xproduct />} />
         <Route exact path="*" element={<PageNotFound />} />
         <Route exact path="/home" element={<Home />} />
         <Route exact path="/guest" element={<Guest />} />

@@ -8,6 +8,12 @@ import swal from "sweetalert";
 import Frame from "../../../Components/MainFrame/Frame";
 import { useCallback } from "react";
 import { fetchDataItem } from "../CustomHooks/getItemData";
+import { DataGrid } from '@mui/x-data-grid';
+import Box from '@mui/material/Box';
+import InputLabel from '@mui/material/InputLabel';
+import MenuItem from '@mui/material/MenuItem';
+import FormControl from '@mui/material/FormControl';
+import Select from '@mui/material/Select';
 
 const AdjustBypass = () => {
   let user = JSON.parse(sessionStorage.getItem("userData"));
@@ -277,6 +283,7 @@ const AdjustBypass = () => {
 
   // end
   let { loading, productData, bypass } = bypassState;
+  console.log('BYBASS===>', bypass)
 
   //array of option to set the default value to current value .
   let options = [
@@ -293,9 +300,37 @@ const AdjustBypass = () => {
     {
       header: 'set Bypass',
       value: ''
-
     }
   ]
+  let [COLUMNS, setCOLUMNS] = useState([])
+  const [storeState, setStoreState] = useState('');
+
+  useEffect(() => {
+    // setCOLUMNS([
+    //   ...[{ field: 'StoreID', headerName: 'Store ID ', width: 200 },
+    //   { field: 'Name', headerName: 'Store Name ', width: 200 },
+    //   {
+    //     field: 'StoreStatus', headerName: 'Store Status', width: 300, renderCell: (params) => (
+    //       <Box sx={{ minWidth: 120 }}>
+    //         <FormControl fullWidth>
+    //           <Select
+    //             labelId="demo-simple-select-label"
+    //             id="demo-simple-select"
+    //             defaultValue={params.value}
+    //             // value={params.value}
+    //             label="State"
+    //             onChange={(e) => {
+    //               handleInputChange(e, index);
+    //             }}
+    //           >
+    //             {options.map((item) => <MenuItem value={item.value}>{item.header}</MenuItem>
+    //             )}
+    //           </Select>
+    //         </FormControl>
+    //       </Box>
+    //     ),
+    //   },]])
+  }, [bypassState])
 
   return (
     <React.Fragment>
@@ -306,110 +341,175 @@ const AdjustBypass = () => {
           <React.Fragment>
             <form
               onSubmit={formSubmit}
-              className="row justify-content-evenly mt-5"
+              className="row justify-content-evenly mt-5  w-100 w-md-75 m-auto "
             >
-              <div className="col-5">
-                <label
-                  htmlFor="productCodet"
-                  className=" ms-2 my-1  fs-5  text-dark"
-                >
-                  Item Lookup Code
-                </label>
-                <input
-                  readOnly
-                  id="productCode"
-                  name="ItemLookupCode"
-                  type="text"
-                  className="form-control "
-                  value={productData.ItemLookupCode}
-                />
-              </div>
-
-              <div className="col-5">
-                <label
-                  htmlFor="productCodet"
-                  className="ms-2 my-1 fs-5   text-dark"
-                >
-                  RMS Description
-                </label>
-                <input
-                  readOnly
-                  id="productCode"
-                  type="text"
-                  className="form-control "
-                  value={productData.Description}
-                />
-              </div>
-              <div className="col-12 row justify-content-center  text-center mt-3">
-                <div className="col-12 mt-3 mb-2">
-                  <h4>Check any of below buttons to submit Bypass values</h4>
-                </div>
-                <div className="col position-relative">
-                  <button
-                    className="btn btn-success"
-                    type="button"
-                    onClick={() => {
-                      makeInStock();
-                    }}
-                  >
-                    InStock
-                  </button>
-                </div>
-
-                <div className="col position-relative">
-                  <button
-                    className="btn btn-danger"
-                    type="button"
-                    onClick={() => {
-                      makeOutStock();
-                    }}
-                  >
-                    Out of Stock
-                  </button>
-                </div>
-                <div className="col position-relative">
-                  <button
-                    className="btn btn-dark"
-                    type="button"
-                    onClick={() => {
-                      bypassFunHandler(productData.ID)
-                    }}
-                  >
-                    Remove bypass
-                  </button>
-                </div>
-              </div>
-              <div className="col-12">
-                <div className="row mt-4 p-3 g-3">
-                  {bypass.map((item, index) => {
-                    return (
-                      <div key={index} className="col-3">
+              {/* {console.log('bypass[0].StoreStatus', bypass[0].StoreStatus)} */}
+              <div className="ps-5 ms-5">
+                {
+                  bypass.length > 0 ? bypass[0].StoreStatus === '' ?
+                    <>
+                      <div className="col-12  col-md-4">
                         <label
-                          htmlFor={item.StoreID}
-                          className="ms-2 my-1 fs-5 text-dark"
+                          htmlFor="productCodet"
+                          className=" ms-2 my-1  fs-6 fs-md-6  text-dark"
                         >
-                          {item.Name}
-                          <span className="fs-6 ms-3 fst-italic fw-lighter">
-                            {notFound ? 'This item is not Bypass' : ''}
-                          </span>
+                          Item Lookup Code
                         </label>
-                        <select
-                          required={true}
-                          className="form-control"
-                          name={item.Name}
-                          id={item.StoreID}
-                          value={item.StoreStatus}
-                          onChange={(e) => {
-                            handleInputChange(e, index);
+                        <input
+                          readOnly
+                          id="productCode"
+                          name="ItemLookupCode"
+                          type="text"
+                          className="form-control "
+                          value={productData.ItemLookupCode}
+                        />
+                      </div>
+
+                      <div className="col-12 col-md-4">
+                        <label
+                          htmlFor="productCodet"
+                          className="ms-2 my-1 fs-6 fs-md-5   text-dark"
+                        >
+                          RMS Description
+                        </label>
+                        <input
+                          readOnly
+                          id="productCode"
+                          type="text"
+                          className="form-control "
+                          value={productData.Description}
+                        />
+                      </div></> : <>
+                      <div className="col-12 col-md-4">
+                        <label
+                          htmlFor="productCodet"
+                          className=" ms-2 my-1  fs-5  text-dark"
+                        >
+                          Item Lookup Code
+                        </label>
+                        <input
+                          readOnly
+                          id="productCode"
+                          name="ItemLookupCode"
+                          type="text"
+                          className="form-control "
+                          value={productData.ItemLookupCode}
+                        />
+                      </div>
+
+                      <div className="col-10 col-md-4 ">
+                        <label
+                          htmlFor="productCodet"
+                          className="ms-2 my-1 fs-5   text-dark"
+                        >
+                          RMS Description
+                        </label>
+                        <input
+                          readOnly
+                          id="productCode"
+                          type="text"
+                          className="form-control "
+                          value={productData.Description}
+                        />
+                      </div>
+                      <div className="col-12 lign-self-end align-self-md-center text-end text-md-center">
+                        <button
+                          className="btn btn-dark mt-3 mt-md-0"
+                          type="button"
+                          onClick={() => {
+                            bypassFunHandler(productData.ID)
                           }}
                         >
-                          {
-                            options.map((option) => <option value={option.value}>{option.header} </option>)
-                          }
-                        </select>
-                      </div>
-                    );
-                  })}
+                          Remove bypass
+                        </button>
+                      </div></> : ''
+                }
+                <div className="col-12 row justify-content-center  text-center mt-3">
+                  <div className="col-12 mt-3 mb-2 ">
+                    <h4 className="h6 ">Check any of below buttons to submit Bypass values</h4>
+                  </div>
+                  <div className="row ">
+                    <div className="col-4 col-md-6 position-relative ">
+                      <button
+                        className="btn btn-success"
+                        type="button"
+                        onClick={() => {
+                          makeInStock();
+                        }}
+                      >
+                        InStock
+                      </button>
+                    </div>
+
+                    <div className="col-8 col-md-6 position-relative">
+                      <button
+                        className="btn btn-danger"
+                        type="button"
+                        onClick={() => {
+                          makeOutStock();
+                        }}
+                      >
+                        Out of Stock
+                      </button>
+                    </div>
+
+                  </div>
+                </div>
+
+              </div>
+
+              <div className="col-12">
+                <div className="row mt-5 bg-white p-0 p-md-5 m-auto  w-100 w-md-75">
+                  <table className="table">
+                    <thead className="mb-2">
+                      <th  style={{ verticalAlign: "middle" , textAlign: 'center'}}>StoreID</th>
+                      <th  style={{ verticalAlign: "middle" , textAlign: 'center'}}>Name </th>
+                      <th  style={{ verticalAlign: "middle" , textAlign: 'center'}}>State</th>
+                    </thead>
+                    <tbody>
+                      {bypass.map((item, index) => {
+                        return (
+
+                          <tr key={index} >
+                            <td className="p-0"  style={{ verticalAlign: "middle" , textAlign: 'center'}}>{item.StoreID}</td>
+
+                            <td className="p-0 " style={{ verticalAlign: "middle" , textAlign: 'center'}}>{item.Name}</td>
+
+                            <td className="p-0 "  style={{ verticalAlign: "middle" , textAlign: 'center'}}>
+
+                              <FormControl sx={{ m: 1, minWidth: 120 }}>
+                                <Select
+                                  value={item.StoreStatus}
+                                  onChange={(e) => {
+                                    handleInputChange(e, index);
+                                  }}
+                                  displayEmpty
+                                  inputProps={{ 'aria-label': 'Without label' }}
+                                >
+
+
+
+                                  {
+                                    options.map((item) => <MenuItem value={item.value}>{item.header}</MenuItem>
+                                    )
+                                  }
+                                </Select>
+                              </FormControl>
+
+
+                            </td>
+                          </tr>
+                        );
+                      })}
+
+                    </tbody>
+
+                  </table>
+
+
+
+
+
                 </div>
               </div>
 

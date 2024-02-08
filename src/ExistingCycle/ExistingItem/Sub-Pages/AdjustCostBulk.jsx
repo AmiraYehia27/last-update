@@ -90,9 +90,11 @@ const AdjustCostBulk = () => {
 
     try {
       if (finalArr.length > 0) {
+        console.log('FINAL Array==>', )
         const response = await axios.post(
           "http://192.168.26.15/cms/api/update-cost",
           finalArr
+          
         );
         if (response.data.message) {
           swal({

@@ -139,17 +139,39 @@ const StarProducts = () => {
       const sheetData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
 
       sheetData.filter((item) => {
-
         const pData = Products.filter(
           p => p.ItemLookupCode === String(item.lookupcode)
         );
         console.log(pData, "hi hi");
-
         if (pData) {
           setProductData(pData);
         }
-
       });
+      console.log('DATASHEET ====> ', sheetData)
+
+      const validationFun = async () => {
+        let res = await axios.get('http://192.168.26.15/cms-test/api/ex-validation', {
+          params: [...sheetData]
+        })
+        console.log('validation ressssss ====>', res.data)
+        // sheetData.map((item1) => {
+        //   let flag = 0, ItemID
+        //   res.data['Success'].map((item2) => {
+        //     if (item1.ItemLookupCode == item2.ItemLookupCode) {
+        //       flag++;
+        //       ItemID = item2.ItemID
+        //     }
+        //   })
+        //   if (flag != 0) {
+        //     setValidatedData((prev) => [...prev, { ...item1, ItemID, user }])
+        //   } else {
+        //     setFailedValidatedData((prev) => [...prev, item1])
+        //   }
+        // })
+      }
+      validationFun();
+
+
 
       console.log(sheetData, 'Sheetdata');
 
@@ -160,7 +182,7 @@ const StarProducts = () => {
 
       if (isValidTemplate) {
         const validData = sheetData.filter(
-          (data) => data.lookupcode 
+          (data) => data.lookupcode
         );
 
         if (validData.length > 0) {

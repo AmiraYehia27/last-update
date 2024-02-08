@@ -127,7 +127,11 @@ input[type="checkbox"]:before {
     /* flex-basis: 25%; */
 
 }
+.MuiInputBase-root.MuiInput-root.MuiInput-underline.MuiInputBase-colorPrimary.MuiInputBase-formControl select{
+    border: none !important;
+    font-size: 10px !important;
 
+}
 /* .css-1dmqq7i-MuiNativeSelect-select-MuiInputBase-input-MuiInput-input.css-1dmqq7i-MuiNativeSelect-select-MuiInputBase-input-MuiInput-input.css-1dmqq7i-MuiNativeSelect-select-MuiInputBase-input-MuiInput-input {
     display: inline-flex;
     -webkit-flex-direction: column;
@@ -260,11 +264,21 @@ input::file-selector-button {
 .MuiButtonBase-root.MuiButton-root.MuiButton-contained.MuiButton-containedPrimary.MuiButton-sizeMedium.MuiButton-containedSizeMedium.MuiButton-root.MuiButton-contained.MuiButton-containedPrimary.MuiButton-sizeMedium.MuiButton-containedSizeMedium {
     background-color: rgba(0, 168, 134, 0.756);
 }
-.Typewriter{
+.success .Typewriter{
     padding: 0 20px 20px 20px ;
     color: rgba(0, 168, 134, 0.886);
-    font-weight: bold;
+    font-weight: bolder;
+}
+.fail .Typewriter{
+    padding: 0 20px 20px 20px ;
+    color: rgb(220, 53, 69);
+    font-weight: bolder;
 }
 .MuiDataGrid-root.MuiDataGrid-root--densityStandard.MuiDataGrid-withBorderColor{
     font-size: 14px !important;
+}
+
+.MuiButtonBase-root.MuiButton-root.MuiButton-contained.MuiButton-containedPrimary.MuiButton-sizeMedium.MuiButton-containedSizeMedium.MuiButton-root.MuiButton-contained.MuiButton-containedPrimary.MuiButton-sizeMedium.MuiButton-containedSizeMedium.uploadkvibtn {
+    margin-top: -80px;
+    margin-left: 20px;
 }

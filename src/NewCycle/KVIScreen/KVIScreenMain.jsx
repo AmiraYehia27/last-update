@@ -10,11 +10,10 @@ import axios from 'axios';
 import Button from '@mui/material/Button';
 import Typewriter from 'typewriter-effect/dist/react';
 import { read, utils } from 'xlsx';
-
-
-
-
-
+import { saveAs } from "file-saver";
+import XLSX from 'sheetjs-style';
+import * as FileSaver from 'file-saver'
+import Swal from "sweetalert";
 
 
 const KVIScreenMain = () => {
@@ -45,15 +44,49 @@ const KVIScreenMain = () => {
             console.log("workSheetName", workSheetName)
             const workSheet = workBook.Sheets[workSheetName];
             console.log("workSheet", workSheet)
-            const fileData = utils.sheet_to_json(workSheet, { header: 1 });
+            const fileData = utils.sheet_to_json(workSheet, { header: 2 });
             console.log('fileData: ', fileData);
-            let newFileData = fileData.map((arr) => Object.assign({}, arr));
-            console.log(newFileData)
+            // setExelData([...fileData]);
+
+            // validation API 
+            let validateFun = async () => {
+                let res = await axios.get('http://192.168.26.15/cms/api/kvi-validation', { params: [...fileData] });
+                const data = await res.data;
+
+
+
+                console.log('VALIDATION data ====>', data);
+                setExelData(data);
+                let editedData = [];
+                data.map((item, index) => {
+                    editedData.push({ ...item, id: index })
+                })
+                console.log('editedData====>', editedData)
+                setValidatedExelData([...editedData]);
+
+                fileData.map((item) => {
+                    console.log("item", item);
+                    let flag = 0
+                    data.map((item2) => {
+                        console.log("item2", item2)
+                        if (item.ItemLookupCode == item2.ItemLookupCode) {
+                            flag++
+                        }
+                    })
+                    if (flag == 0) {
+                        setFailedExelData((prev) => [...prev, item])
+                    }
+                })
+
+            }
+            validateFun()
         };
         reader.readAsBinaryString(file);
         console.log('event.target.value: ', event.target.value);
         event.target.value = null;
+
     };
+
     // the default value of tab 
     const [value, setValue] = useState('1');
 
@@ -61,7 +94,16 @@ const KVIScreenMain = () => {
     const [rows, setRows] = useState([])
 
     // error of removing 
-    const [message, setmessage] = useState('')
+    const [message, setmessage] = useState('');
+
+    // excel data 
+    const [excelData, setExelData] = useState([]);
+
+    // validated Data of excel sheet upload 
+    const [validatedExcelData, setValidatedExelData] = useState([]);
+
+    // failed Data of excel sheet upload 
+    const [failedExcelData, setFailedExelData] = useState([]);
 
     //handel skip tabs 
     const handleChange = (event, newValue) => {
@@ -83,12 +125,6 @@ const KVIScreenMain = () => {
             width: 300,
             editable: false,
         },
-        // {
-        //     field: 'NumberFormat',
-        //     headerName: 'Number Format',
-        //     width: 120,
-        //     editable: false,
-        // },
         {
             field: "action",
             headerName: "Action",
@@ -98,7 +134,7 @@ const KVIScreenMain = () => {
                 const onClick = async (e) => {
                     e.stopPropagation(); // don't select this row after clicking
                     console.log('params==> ', params.row.ItemID);
-                    let res = await axios.put(`http://192.168.26.15/cms-test/api/remove-kvi/${params.row.ItemID}`);
+                    let res = await axios.put(`http://192.168.26.15/cms/api/remove-kvi/${params.row.ItemID}`);
                     console.log('remove response ===>', res);
                     console.log(res.data.message)
                     setmessage(res.data.message)
@@ -115,7 +151,7 @@ const KVIScreenMain = () => {
 
     // function to gat all accrual items 
     const getData = async () => {
-        const res = await axios.get('http://192.168.26.15/cms-test/api/kvi-items');
+        const res = await axios.get('http://192.168.26.15/cms/api/kvi-items');
         console.log(res)
         const data = await res.data.KviItems
         console.log("data====>", data);
@@ -131,17 +167,64 @@ const KVIScreenMain = () => {
         if (message != '') {
             setTimeout(() => {
                 setmessage('')
-            }, "5000");
+            }, "7000");
         }
     }, [message])
 
+    // download file (Template)
+    const downloadFile = (event) => {
+        event.preventDefault();
+        saveAs(`http://192.168.26.15/cms/temps/KVI-items.xlsx`);
+    };
+
+    //Execl Data columns 
+    let excelDataCoulmns = [
+        { field: 'ItemLookupCode', headerName: 'ItemLookupCode ', width: 200 },
+        { field: 'Description', headerName: 'Description', width: 300 },
+
+    ]
 
 
+    // uploadBulkKvis function
+    const uploadBulkKvisHandler = async () => {
+        console.log('EXCEL DATA BEFORE POST', validatedExcelData);
+        try {
+            let res = await axios.post('http://192.168.26.15/cms/api/add-kvi', validatedExcelData);
+            console.log('upload res', res);
+            setmessage('your Kvi items uploaded successfully...');
+            Swal({
+                title: " GREAT ",
+                text: "Items has been updated successfully... ",
+                icon: "success"
+              });
+        
+        } catch (err) {
+            console.log(err);
+            setmessage('Something went wrong!try again');
+            Swal({
+                title: " OPS!! ",
+                text: "Something went wrong ... ",
+                icon: "error"
+              });
+        }
+    }
 
+    // export failed data 
+    const fileType = "application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+    const fileExtension = '.xlsx';
+    const exportToExcel = async () => {
+        const ws = XLSX.utils.json_to_sheet(failedExcelData);
+        const wb = { Sheets: { "data": ws }, SheetNames: ['data'] };
+        const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' })
+        const data = new Blob([excelBuffer], { type: fileType });
+        FileSaver.saveAs(data, 'FailedKVIItems' + fileExtension);
+    }
+    console.log("rows.length--->", rows.length);
 
+    console.log("excelData ------> ", excelData);
+    console.log('VALIDATED ----->', validatedExcelData)
+    console.log('FAILED ', failedExcelData);
 
-
-    console.log("rows.length--->", rows.length)
     return (
         <>
             <div className='frame-container position-relative'>
@@ -172,28 +255,65 @@ const KVIScreenMain = () => {
                                             pageSizeOptions={[5]}
                                             disableRowSelectionOnClick
                                         />
+
                                     </Box>
                                 </TabPanel>
                                 <TabPanel value="2">
                                     <div className='file-container z-high position-relative bg-white p-2 mt-3 rounded  w-75 m-auto'>
                                         <div className='d-flex justify-content-between'>
                                             <label htmlFor="file">Upload Shelf Items </label>
-                                            <button className='border-0 bg-transparent fst-italic text-decoration-underline  '>Click here to download the template  </button>
+                                            <button className='border-0 bg-transparent fst-italic text-decoration-underline ' onClick={downloadFile}>Click here to download the template  </button>
                                         </div>
                                         <input onChange={handleFileChange}
                                             type="file" name="file" id="file"
                                             accept=".csv, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                                         />
                                     </div>
+                                    <div>
+                                        {
+                                            validatedExcelData.length > 0 && <Box sx={{ height: 400, width: '100%' }}>
+                                                <DataGrid
+                                                    rows={validatedExcelData}
+                                                    columns={excelDataCoulmns}
+                                                    initialState={{
+                                                        pagination: {
+                                                            paginationModel: {
+                                                                pageSize: 10,
+                                                            },
+                                                        },
+                                                    }}
+                                                    pageSizeOptions={[5]}
+                                                    disableRowSelectionOnClick
+                                                />
+                                                <div>
+                                                    <Button variant="contained" className='uploadkvibtn' onClick={uploadBulkKvisHandler}>Submit</Button>
+
+                                                    {
+                                                        failedExcelData.length > 0 && <Button variant="contained" className='uploadkvibtn bg-danger' onClick={exportToExcel}>Export Failed Items</Button>
+                                                    }
+
+                                                </div>
+
+                                            </Box>
+                                        }
+
+                                    </div>
                                 </TabPanel>
 
                             </TabContext>
+                            {console.log("message", message)}
                             {
-                                message ? <Typewriter
+                                message ? message.includes('wrong') ? <div className='fail'><Typewriter
                                     options={{
                                         strings: message.toUpperCase(),
                                         autoStart: true,
-                                    }} /> : ""
+                                    }} /></div> : <div className=' success'>
+                                    <Typewriter
+                                        options={{
+                                            strings: message.toUpperCase(),
+                                            autoStart: true,
+                                        }} />
+                                </div> : ''
                             }
                         </Box>
                     </div>

@@ -90,20 +90,20 @@ const ItemAdjustment = () => {
     <React.Fragment>
       <SidebarNew height="90vh" reportsData={reportsData} />
       <nav
-        className="navbar fixed-top    "
+        className="navbar fixed-top w-100 "
         style={{ backgroundColor: "#00a886", height: "10vh" }}
       >
         <div className="container-fluid  row m-0 p-0 align-items-center">
-          <div className="logo-img col d-none d-md-block   ">
+          <div className="logo-img col-4 col-md-2 d-md-block">
             <img
               src="/itemcreation/images/logo_white.png"
               alt="Logo"
-              className="w-100     "
+              className="w-100"
             />
           </div>
-          <div className="    col-10    ">
+          <div className="col-8">
             <ul className="navbar-nav row align-items-center justify-content-evenly my- p-0  position-relative  list-group-horizontal">
-              <li className="   col-4 col-md-5  fs-5  text-center   ">
+              <li className=" col-10 col-md-5  fs-5  text-center   ">
                 <input
                   value={query}
                   onChange={(e) => {
@@ -128,14 +128,14 @@ const ItemAdjustment = () => {
                   placeholder=" Search SKU"
                 />
               </li>
-              <li className="  col-4 col-md-5  fs-5  text-center   "></li>
+              {/* <li className="  col-4 col-md-5  fs-5  text-center "></li> */}
             </ul>
           </div>
         </div>
       </nav>
     
            <motion.ul
-            initial={{ width: "5vw" }}
+            // initial={{ width: "5vw" }}
             whileHover={{ width: "20vw" }}
             onHoverStart={() => {
               SetItemAdjustmentState((prev) => {
@@ -350,7 +350,7 @@ const ItemAdjustment = () => {
               <div className="">
                 <div className="row   m-auto  ">
                   {isFetched ? (
-                    <table className="table table-striped border rounded-3 ">
+                    <table className="table table-striped border rounded-3 w-75 m-auto w-md-100 fs-6 ">
                       <>
                         <thead>
                           <tr>

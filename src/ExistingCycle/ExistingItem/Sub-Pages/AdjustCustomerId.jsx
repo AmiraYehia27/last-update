@@ -15,7 +15,7 @@ const AdjustCustomerId = () => {
   let user = JSON.parse(sessionStorage.getItem("userData"));
   const downloadFile = (event) => {
     event.preventDefault();
-    saveAs(`http://192.168.26.15/cms/temps/Customer-Phone.xlsx`);
+    saveAs(`http://192.168.26.15/cms/temps/Customer-PhoneNumber.xlsx`);
   };
   const [isLoading, setIsLoading] = useState(false);
   const [fileData, setFileData] = useState([]);
@@ -32,24 +32,33 @@ const AdjustCustomerId = () => {
     const sheetName = "sheet";
     const sheetData = workbook.Sheets[sheetName];
     const jsonData = utils.sheet_to_json(sheetData);
-    console.log('jsonData', jsonData)
+    console.log('jsonData', jsonData);
+    let validatedArray = []
     jsonData.map((data) => {
-      if (data.phone.length == 13) {
-        setFileData((pre) => [...pre, data])
+      if (data.PhoneNumber.length == 13) {
+        validatedArray.push(data);
+        // setFileData((pre) => [...pre, data])
       } else {
         setFailedPhoneNum((pre) => [...pre, data])
       }
+      // Add current Tier.
+      console.log('validated data before adding a tier ===> ', validatedArray);
+    });
+    let resFinal = await axios.get('http://192.168.26.15/cms/api/customer-data', {
+      params: [...validatedArray]
+    });
 
-    })
-
+    console.log('resFinal ===> ', resFinal);
+    setFileData(resFinal.data['Customer data retrived successfully!']);
+    setFailedPhoneNum((pre) => [...pre, ...resFinal.data['Customer phone number not exist!']]);
   };
   console.log("fileData", fileData);
-  console.log('faild', failedPhoneNum);
+  console.log('faild', failedPhoneNum)
 
   useEffect(() => {
     if (fileData.length > 0) {
       fileData.forEach((item) => {
-        item.tier = tier;
+        item.currentTier = tier;
         item[`user`] = user.id;
         console.log(item)
       });
@@ -62,7 +71,7 @@ const AdjustCustomerId = () => {
     setFileData(list);
   };
   const finalArr = fileData.filter((item) => {
-    return item.phone !== undefined;
+    return item.PhoneNumber !== undefined;
   });
 
   console.log(finalArr);
@@ -93,7 +102,7 @@ const AdjustCustomerId = () => {
       }
       setIsLoading(false);
     } catch (error) {
-      console.log(error);
+      console.log(' POST ERROR===>', error);
       setIsLoading(false);
 
       swal({
@@ -130,8 +139,8 @@ const AdjustCustomerId = () => {
   const editHandler = (i, value) => {
     console.log(i, value);
     let editObj = { ...fileData[i] };
-    editObj.tier = value;
-    console.log(editObj)
+    editObj.currentTier = value;
+    console.log("editObj", editObj)
     let test = [...fileData];
     test.splice(i, 1, editObj)
     console.log(test)
@@ -141,6 +150,10 @@ const AdjustCustomerId = () => {
   const addTierHandler = (e) => {
     setTier(e.target.value)
   }
+  console.log("fileData", fileData);
+  console.log("failedfiledata", failedPhoneNum);
+
+
   return (
     <Frame headerLabel="Customer tier assigning">
       <React.Fragment>
@@ -160,16 +173,16 @@ const AdjustCustomerId = () => {
             <div className="form-group">
               <label htmlFor="tier" className="my-2">Select Tier</label>
               <select
-
+                disabled = {!fileData.length > 0 }
                 className="form-control py-1"
                 id="tier"
                 name="tier"
                 onChange={addTierHandler}
               >
                 <option defaultValue className=""></option>
-                <option value="1">Silver</option>
-                <option value="2">Gold</option>
-                <option value="3">VIP</option>
+                <option value="Silver">Silver</option>
+                <option value="Gold">Gold</option>
+                <option value="VIP">VIP</option>
               </select>
             </div>
           </div>
@@ -208,11 +221,12 @@ const AdjustCustomerId = () => {
                     return (
                       <tr>
                         <td>{index + 1}</td>
-                        <td>{item.phone}</td>
-                        <td><select className="border-0 fs-6 rounded px-5 py-2  shawow" name="tier" id="tier" defaultValue={item.tier && ''} onChange={(e) => { editHandler(index, e.target.value) }}>
-                          <option value="1">Silver</option>
-                          <option value="2">Gold</option>
-                          <option value="3">VIP</option>
+                        {console.log('item===>', item.currentTier == 'Silver' ? '1' : item.currentTier == 'Gold' ? "2" : '3')}
+                        <td>{item.PhoneNumber}</td>
+                        <td><select className="border-0 fs-6 rounded px-5 py-2 " name="tier" id="tier" defaultValue={item.currentTier} onChange={(e) => { editHandler(index, e.target.value) }}>
+                          <option value="Silver">Silver</option>
+                          <option value="Gold">Gold</option>
+                          <option value="VIP">VIP</option>
                         </select></td>
                         <td><i className="fa-solid fa-trash cursor" onClick={() => { deleteHandler(index) }}></i></td>
                       </tr>

@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import MaterialTable from "material-table";
-import { ThemeProvider, createTheme } from "@mui/material";
+import { List, ThemeProvider, createTheme } from "@mui/material";
 import { forwardRef } from "react";
 import AddBox from "@mui/icons-material/AddBox";
 import ArrowDownward from "@mui/icons-material/ArrowDownward";
@@ -39,18 +39,27 @@ const Xproduct = () => {
     const selectRef = useRef();
     const defaultMaterialTheme = createTheme();
     const [Products, setProducts] = useState([]);
+    const [selectedItems, setSelectedItems] = useState([]);
+    const [validateData, setValidatedData] = useState([]);
+    const [failedvalidateData, setFailedValidatedData] = useState([]);
+
+
+
 
     // export data frpm edit selected all selected star product 
     const fileType = "application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
     const fileExtension = '.xlsx';
-    const exportToExcel = async () => {
-        const ws = XLSX.utils.json_to_sheet(selectedItems);
+
+    //EXPORT TO EXCEL SHEET 
+    const exportToExcel = async (items, name) => {
+        const ws = XLSX.utils.json_to_sheet(items);
         const wb = { Sheets: { "data": ws }, SheetNames: ['data'] };
         const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' })
         const data = new Blob([excelBuffer], { type: fileType });
-        FileSaver.saveAs(data, 'SelectedStarProduct' + fileExtension);
+        FileSaver.saveAs(data, name + fileExtension);
     }
 
+    //TABLE ICONS 
     const tableIcons = {
         Add: forwardRef((props, ref) => <AddBox {...props} ref={ref} />),
         Check: forwardRef((props, ref) => <Check {...props} ref={ref} />),
@@ -92,8 +101,10 @@ const Xproduct = () => {
             try {
                 setIsTableLoading(true);
                 let tableRes = await axios.get(
-                    `http://192.168.26.15/cms/api/itemz`
+                    `http://192.168.26.15/cms/api/ex-itemz`
                 );
+                console.log('AllData res ==>', tableRes);
+
                 setIsTableLoading(false);
                 setTableData(tableRes.data.Item);
                 const productData = tableRes.data.Item;
@@ -111,7 +122,7 @@ const Xproduct = () => {
     //start handle bulk
     const downloadFile = (event) => {
         event.preventDefault();
-        saveAs(`http://192.168.26.15/cms/temps/StarProducts.xlsx`);
+        saveAs(`http://192.168.26.15/cms/temps/Accrual-EX.xlsx`);
     };
 
     const [productData, setProductData] = useState(null);
@@ -141,49 +152,88 @@ const Xproduct = () => {
                 }
 
             });
+            const finalData = sheetData.filter((data) => data.phone.length == 13);
+            console.log('finalData ==== > ', finalData)
 
-            console.log(sheetData, 'Sheetdata');
 
-            const isValidTemplate =
-                sheetData.length > 0 &&
-                sheetData[0].lookupcode !== undefined &&
-                sheetData[0].extraPoints !== undefined;
 
-            if (isValidTemplate) {
-                const validData = sheetData.filter(
-                    (data) => data.lookupcode && data.extraPoints
-                );
 
-                if (validData.length > 0) {
-                    swal({
-                        text: 'Items uploaded successfully',
-                        icon: 'success',
-                        button: false,
-                        timer: 1200,
-                    });
-                } else {
-                    swal({
-                        title: `Hey.. ${JSON.parse(sessionStorage.getItem('userData'))?.name
-                            }`,
-                        text: 'Please use the correct template!',
-                        icon: 'error',
-                        button: false,
-                        timer: 4000,
-                    });
-                }
 
-                setFileData(validData);
-            } else {
-                console.error('Invalid template structure');
-                swal({
-                    title: `Hey.. ${JSON.parse(sessionStorage.getItem('userData'))?.name
-                        }`,
-                    text: 'Invalid template structure!',
-                    icon: 'error',
-                    button: false,
-                    timer: 4000,
+            const validationFun = async () => {
+                let res = await axios.get('http://192.168.26.15/cms/api/ex-validation', {
+                    params: [...finalData]
+                })
+                console.log('validation res ====>', res.data)
+                finalData.map((item1) => {
+                    let flag = 0, ItemID
+                    res.data['Success'].map((item2) => {
+                        if (item1.ItemLookupCode == item2.ItemLookupCode) {
+                            flag++;
+                            ItemID = item2.ItemID
+                        }
+                    })
+                    if (flag != 0) {
+                        setValidatedData((prev) => [...prev, { ...item1, ItemID, user }])
+                    } else {
+                        setFailedValidatedData((prev) => [...prev, item1])
+                    }
                 });
+
+
+              
+
+
+
             }
+            validationFun();
+
+
+
+
+
+
+
+
+            // const isValidTemplate =
+            //     sheetData.length > 0 &&
+            //     sheetData[0].ItemLookupCode !== undefined
+
+
+            // if (isValidTemplate) {
+            //     const validData = sheetData.filter(
+            //         (data) => data.ItemLookupCode
+            //     );
+
+            //     if (validData.length > 0) {
+            //         swal({
+            //             text: 'Items uploaded successfully',
+            //             icon: 'success',
+            //             button: false,
+            //             timer: 1200,
+            //         });
+            //     } else {
+            //         swal({
+            //             title: `Hey.. ${JSON.parse(sessionStorage.getItem('userData'))?.name
+            //                 }`,
+            //             text: 'Please use the correct template!',
+            //             icon: 'error',
+            //             button: false,
+            //             timer: 4000,
+            //         });
+            //     }
+
+            //     setFileData(validData);
+            // } else {
+            //     console.error('Invalid template structure');
+            //     swal({
+            //         title: `Hey.. ${JSON.parse(sessionStorage.getItem('userData'))?.name
+            //             }`,
+            //         text: 'Invalid template structure!',
+            //         icon: 'error',
+            //         button: false,
+            //         timer: 4000,
+            //     });
+            // }
         };
 
         reader.readAsArrayBuffer(file);
@@ -192,9 +242,7 @@ const Xproduct = () => {
 
     let user = JSON.parse(sessionStorage.getItem("userData"))?.id;
 
-    const finalArr = fileData
-        .filter((item) => item.extraPoints !== undefined)
-        .map((item) => ({ ...item, user }));
+    const finalArr = fileData.map((item) => ({ ...item, user, IsAccrualExcluded: 1 }));
 
     console.log(finalArr, 'post');
 
@@ -202,12 +250,13 @@ const Xproduct = () => {
     async function formSubmit(e) {
         e.preventDefault();
         setIsLoading(true);
+        console.log('FINAL FINAL ARR ', validateData)
 
         try {
-            if (finalArr.length > 0) {
+            if (validateData.length > 0) {
                 const response = await axios.post(
-                    "http://192.168.26.15/cms/api/add-bulkstar",
-                    finalArr
+                    "http://192.168.26.15/cms/api/add-bulkexitem",
+                    [...validateData]
                 );
                 if (response.data.message) {
                     swal({
@@ -242,10 +291,17 @@ const Xproduct = () => {
     }
     //End
     console.log('final Array', finalArr)
-    const handleDeleteItem = (index) => {
+
+    // rfemove item from submitted array 
+    const handleDeleteItem = (index, e) => {
+        e.preventDefault()
+
         let list = [...filteredChoosedData];
+        console.log('ilteredChoosedData===>', filteredChoosedData);
         let listPost = [...filteredPostData];
         list.splice(index, 1);
+        console.log('AFTERREMOVING==>', list)
+
         listPost.splice(index, 1);
         setChoosedData(list);
         setFilteredChoosedData(list);
@@ -255,12 +311,14 @@ const Xproduct = () => {
     const handleSubmit = async (e) => {
         setIsLoading(true);
         e.preventDefault();
+        console.log("filteredChoosedData /////////////////", filteredChoosedData)
         try {
             let postRes = await axios.post(
-                "http://192.168.26.15/cms/api/add-star",
+                "http://192.168.26.15/cms/api/add-exitem",
                 filteredChoosedData
                 // filteredPostData
             );
+            console.log("postRes===>", postRes.data.message)
             // console.log(postRes);
             if (postRes.data.message) {
                 setIsLoading(false);
@@ -285,14 +343,15 @@ const Xproduct = () => {
     const handleAddingNewItem = (props) => {
         console.log('lllllllllllllll')
         const newItem = {
-            itemID: props.data.ID,
+            ItemID: props.data.ID,
             ItemLookupCode: props.data.ItemLookupCode,
             Description: props.data.Description,
             user: user,
+            IsAccrualExcluded: 1
         };
 
         // Check if new item exists in selectedItems
-        const exists = selectedItems.some((item) => item.itemID === newItem.itemID);
+        const exists = selectedItems.some((item) => item.itemID === newItem.ItemID);
 
         if (exists) {
             // Show error
@@ -308,7 +367,7 @@ const Xproduct = () => {
     const choosedDataMemo = useMemo(() => {
         setFilteredChoosedData(
             choosedData.reduce((object, current) => {
-                const x = object.find((item) => item.itemID === current.itemID);
+                const x = object.find((item) => item.ItemID === current.ItemID);
                 if (!x) {
                     swal({
                         text: "Item Added Successfully",
@@ -350,17 +409,16 @@ const Xproduct = () => {
 
 
     const [viewMode, setViewMode] = useState("select");
-    const [selectedItems, setSelectedItems] = useState([]);
-
+    const fetchItems = async () => {
+        const response = await axios.get(
+            "http://192.168.26.15/cms/api/all-exitems"
+        );
+        console.log('modeSelected', response)
+        setSelectedItems(response.data.Ex_Item);
+    };
     useEffect(() => {
         if (viewMode === "edit") {
-            const fetchItems = async () => {
-                const response = await axios.get(
-                    "http://192.168.26.15/cms/api/all-stars"
-                );
-                console.log('modeSelected', response)
-                setSelectedItems(response.data.star_products);
-            };
+
             fetchItems();
         }
     }, [viewMode]);
@@ -371,17 +429,32 @@ const Xproduct = () => {
 
         try {
 
-            const response = await fetch(`http://192.168.26.15/cms/api/remove-star/${id}`, {
+            const response = await fetch(`http://192.168.26.15/cms/api/remove-exitem/${id}`, {
                 method: 'POST'
             });
-
+            console.log('removing res===>', response)
             const data = await response.json();
+            console.log('data ', data)
+            if (data.message.includes('successfully')) {
+                fetchItems()
+                swal({
+                    text: 'Item removed successfully',
+                    icon: 'success',
+                    button: false,
+                    timer: 1200,
+                });
 
-            if (data.success) {
                 // Remove item from state  
                 setSelectedItems(prevItems =>
                     prevItems.filter(item => item.id !== id)
                 );
+            } else {
+                swal({
+                    text: 'Something happened try again later !',
+                    icon: 'error',
+                    button: false,
+                    timer: 1200,
+                });
             }
 
         } catch (error) {
@@ -393,6 +466,8 @@ const Xproduct = () => {
         }
 
     }
+
+    console.log('validatedItems ====>', validateData)
 
     return (
         <Frame headerLabel="Accrual">
@@ -424,7 +499,6 @@ const Xproduct = () => {
                         </button>
                     </div>
                 </nav>
-
                 {viewMode === "select" && (
                     <section
                         id=""
@@ -500,8 +574,8 @@ const Xproduct = () => {
                                                                 <td>{item.Description}</td>
                                                                 <td>
                                                                     <button
-                                                                        onClick={() => {
-                                                                            handleDeleteItem(index);
+                                                                        onClick={(e) => {
+                                                                            handleDeleteItem(index, e);
                                                                         }}
                                                                         className="btn btn-danger"
                                                                     >
@@ -535,9 +609,10 @@ const Xproduct = () => {
                     </section>
                 )}
 
+
                 {viewMode === "bulk" && (
                     <React.Fragment>
-                        <h1>Star Products Bulk Update</h1>
+                        <h1> Accrual Execluded Items Bulk Update</h1>
                         <form className="row mt-4" onSubmit={formSubmit}>
                             <div className="row mb-4">
                                 <div className="form-group">
@@ -571,7 +646,7 @@ const Xproduct = () => {
                                     </button>
                                 </div>
                             </div>
-                            {fileData.length > 0 && (
+                            {validateData.length > 0 && (
                                 <>
                                     <table className="table table-striped border round-3 my-3">
                                         <thead>
@@ -581,8 +656,7 @@ const Xproduct = () => {
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {console.log("fileData", fileData)}
-                                            {fileData.map((item, index) => (
+                                            {validateData.map((item, index) => (
                                                 <tr key={index}>
                                                     <td>
                                                         <input
@@ -598,7 +672,7 @@ const Xproduct = () => {
                                                             name={`ItemLookupCode_${index}`}
                                                             type="text"
                                                             className="form-control"
-                                                            value={item.lookupcode}
+                                                            value={item.ItemLookupCode}
                                                         />
                                                     </td>
 
@@ -608,11 +682,9 @@ const Xproduct = () => {
                                                             name="Description"
                                                             type="text"
                                                             className="form-control"
-                                                            value={item.description}
+                                                            value={item.Description}
                                                         />
                                                     </td>
-
-
 
                                                 </tr>
                                             ))}
@@ -625,12 +697,20 @@ const Xproduct = () => {
                                 </>
                             )}
                         </form>
+                        {
+                            failedvalidateData.length > 0 && <button type="" className="btn btn-danger" onClick={() => {
+                                exportToExcel(failedvalidateData, 'failed items')
+                            }}>Export Failed Items </button>
+                        }
                     </React.Fragment>
                 )}
 
+
                 {viewMode === "edit" && (
                     <div>
-                        <button onClick={exportToExcel} className="text-white p-2 mt-3 outline-none border-0 rounded bg-black ">Export Selected Star Products <i className="fa-solid fa-download"></i></button>
+                        <button onClick={() => {
+                            exportToExcel(selectedItems, 'selectedItems')
+                        }} className="text-white p-2 mt-3 outline-none border-0 rounded bg-black ">Export Selected accrual Execluded Items  <i className="fa-solid fa-download"></i></button>
 
                         <table className="table table-striped border round-3 my-3">
                             <thead>
@@ -643,7 +723,8 @@ const Xproduct = () => {
                             </thead>
 
                             <tbody>
-                                {selectedItems.map(item => (
+                                {console.log('selectedItems=====>', selectedItems)}
+                                {selectedItems != undefined && selectedItems.map(item => (
                                     <tr key={item.id}>
                                         <td>{item.id}</td>
                                         <td>{item.ItemLookupCode}</td>
@@ -662,6 +743,8 @@ const Xproduct = () => {
                         </table>
                     </div>
                 )}
+
+
             </React.Fragment>
         </Frame>
     );
